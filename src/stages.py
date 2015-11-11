@@ -299,6 +299,7 @@ class Stages(object):
                     "--filterExpression \"DP < 10\" --filterName \"LowCoverage\" " \
                     "--filterExpression \"MQ < 40\" --filterName \"LowMappingQual\" " \
                     "--filterExpression \"SOR > 4.0\" --filterName \"StrandBias\" " \
+                    "--filterExpression \"HRun > 8\" --filterName \"HRun8\" " \
                     "--variant {combined_vcf} -o {vcf_out}".format(reference=self.reference,
                             combined_vcf=combined_vcf, vcf_out=vcf_out)
         self.run_gatk('filter_variants_gatk', gatk_args)

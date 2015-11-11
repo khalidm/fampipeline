@@ -33,6 +33,9 @@ def make_pipeline(state):
         # We assume the sample name may consist of only alphanumeric
         # characters.
         filter=formatter('.+/(?P<sample>[a-zA-Z0-9]+)_R1.fastq.gz'),
+        # IF THE READS ARE SPLIT IN LANES e.g. FAM_f2_SM_f2i5_ID_idx46-TCCCGA-L001-L002_LB_lb_PL_ILLUMINA_R2
+        # filter=formatter(
+            # '.+/FAM_(?P<famid>[a-zA-Z0-9]+)_SM_(?P<sample>[a-zA-Z0-9-]+)_ID_(?P<runid>[a-zA-Z0-9-]+)_(?P<lib>[a-zA-Z0-9-]+)_(?P<lane>[a-zA-Z0-9]+)_R1.fastq.gz'),
         # Add one more inputs to the stage:
         #    1. The corresponding R2 FASTQ file
         add_inputs=add_inputs('{path[0]}/{sample[0]}_R2.fastq.gz'),
@@ -188,6 +191,5 @@ def make_pipeline(state):
         input=output_from('select_variants_gatk'),
         filter=suffix('.selected.vcf'),
         output='.famseq.vcf')
-
 
     return pipeline
