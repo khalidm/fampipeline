@@ -208,6 +208,7 @@ class Stages(object):
                     "-A StrandBiasBySample -A StrandOddsRatio " \
                     "-A TandemRepeatAnnotator -A VariantType " \
                     "-A TransmissionDisequilibriumTest" \
+                    "--dbsnp {dbsnp} " \
                     # "--variant {CEU_mergeGvcf} --variant {GBR_mergeGvcf} " \
                     # "--variant {FIN_mergeGvcf}".format(reference=self.reference,
                     " ".format(reference=self.reference,
@@ -289,10 +290,21 @@ class Stages(object):
                             vcf_out=vcf_out)
         self.run_gatk('combine_variants_gatk', gatk_args)
 
+    def filter_variants_gatk(self, combined_vcf, vcf_out):
+        '''Filter variants using GATK'''
+        gatk_args = "-T VariantFiltration -R {reference} --disable_auto_index_creation_and_locking_when_reading_rods " \
+                    "--filterExpression \"QUAL < 30.0\" --filterName \"VeryLowQual\" " \
+                    "--filterExpression \"QD < 2.0\" --filterName \"LowQD\" " \
+                    "--filterExpression \"DP < 10\" --filterName \"LowCoverage\" " \
+                    "--filterExpression \"MQ < 40\" --filterName \"LowMappingQual\" " \
+                    "--filterExpression \"SOR > 4.0\" --filterName \"StrandBias\" " \
+                    "--variant {combined_vcf} -o {vcf_out}".format(reference=self.reference,
+                            combined_vcf=combined_vcf, vcf_out=vcf_out)
+        self.run_gatk('filter_variants_gatk', gatk_args)
 
-    def select_variants_gatk(self, combined_vcf, vcf_out):
+    def select_variants_gatk(self, filtered_vcf, vcf_out):
         '''Select variants using GATK'''
         gatk_args = "-T SelectVariants -R {reference} --disable_auto_index_creation_and_locking_when_reading_rods " \
-                    "--variant {combined_vcf} -select 'DP > 100' -o {vcf_out}".format(reference=self.reference,
-                            combined_vcf=combined_vcf, vcf_out=vcf_out)
+                    "--variant {filtered_vcf} --excludeFiltered -o {vcf_out}".format(reference=self.reference,
+                            filtered_vcf=filtered_vcf, vcf_out=vcf_out)
         self.run_gatk('select_variants_gatk', gatk_args)
