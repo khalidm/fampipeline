@@ -181,4 +181,13 @@ def make_pipeline(state):
         filter=suffix('.filtered.vcf'),
         output='.selected.vcf')
 
+    # Rare variant genotyping using FamSeq
+    pipeline.transform(
+        task_func=stages.rare_variants_famseq,
+        name='rare_variants_famseq',
+        input=output_from('select_variants_gatk'),
+        filter=suffix('.selected.vcf'),
+        output='.famseq.vcf')
+
+
     return pipeline

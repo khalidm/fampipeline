@@ -42,6 +42,7 @@ class Stages(object):
         self.CEU_mergeGvcf = self.get_options('CEU_mergeGvcf')
         self.GBR_mergeGvcf = self.get_options('GBR_mergeGvcf')
         self.FIN_mergeGvcf = self.get_options('FIN_mergeGvcf')
+        self.ped_file = self.get_options('ped_file')
 
     def run_picard(self, stage, args):
         mem = int(self.state.config.get_stage_options(stage, 'mem'))
@@ -308,3 +309,10 @@ class Stages(object):
                     "--variant {filtered_vcf} --excludeFiltered -o {vcf_out}".format(reference=self.reference,
                             filtered_vcf=filtered_vcf, vcf_out=vcf_out)
         self.run_gatk('select_variants_gatk', gatk_args)
+
+    def rare_variants_famseq(self, selected_vcf, vcf_out):
+        '''Call rare variants with pedigree information using FamSeq'''
+        # e.g. FamSeq vcf -vcfFile ../TestData/test.vcf -pedFile ../TestData/fam01.ped -output test.FamSeq.vcf -v
+        command = "FamSeq vcf -vcfFile {selected_vcf} -pedFile {ped_file} -output {vcf_out}".format(selected_vcf=selected_vcf,
+                            ped_file=self.ped_file, vcf_out=vcf_out)
+        run_stage(self.state, 'rare_variants_famseq', command)
