@@ -39,11 +39,11 @@ class Stages(object):
         self.one_k_g_highconf_snps = self.get_options('one_k_g_highconf_snps')
         self.hapmap = self.get_options('hapmap')
         self.interval_hg19 = self.get_options('interval_hg19')
-        self.CEU_mergeGvcf = self.get_options('CEU_mergeGvcf')
-        self.GBR_mergeGvcf = self.get_options('GBR_mergeGvcf')
-        self.FIN_mergeGvcf = self.get_options('FIN_mergeGvcf')
         self.ped_file = self.get_options('ped_file')
         self.famseq_ped_file = self.get_options('famseq_ped_file')
+        # self.CEU_mergeGvcf = self.get_options('CEU_mergeGvcf')
+        # self.GBR_mergeGvcf = self.get_options('GBR_mergeGvcf')
+        # self.FIN_mergeGvcf = self.get_options('FIN_mergeGvcf')
 
     def run_picard(self, stage, args):
         mem = int(self.state.config.get_stage_options(stage, 'mem'))
@@ -66,11 +66,11 @@ class Stages(object):
         pass
 
 
-    def align_bwa(self, inputs, bam_out, sample_id):
+    def align_bwa(self, inputs, bam_out, sample, id):
         '''Align the paired end fastq files to the reference genome using bwa'''
         fastq_read1_in, fastq_read2_in = inputs
         cores = self.get_stage_options('align_bwa', 'cores')
-        read_group = '"@RG\tID:{sample}\tSM:{sample}\tPL:Illumina"'.format(sample=sample_id)
+        read_group = '"@RG\\tID:{id}\\tSM:{sample}\\tPL:Illumina"'.format(sample=sample, id=id)
         command = 'bwa mem -t {cores} -R {read_group} {reference} {fastq_read1} {fastq_read2} ' \
                   '| samtools view -b -h -o {bam} -' \
                   .format(cores=cores,
@@ -79,6 +79,7 @@ class Stages(object):
                       fastq_read2=fastq_read2_in,
                       reference=self.reference,
                       bam=bam_out)
+        safe_make_dir('results/alignments/{sample}'.format(sample=sample))
         run_stage(self.state, 'align_bwa', command)
 
 
@@ -209,12 +210,10 @@ class Stages(object):
                     "-A SampleList -A SpanningDeletions " \
                     "-A StrandBiasBySample -A StrandOddsRatio " \
                     "-A TandemRepeatAnnotator -A VariantType " \
-                    "-A TransmissionDisequilibriumTest" \
-                    "--dbsnp {dbsnp} " \
-                    # "--variant {CEU_mergeGvcf} --variant {GBR_mergeGvcf} " \
-                    # "--variant {FIN_mergeGvcf}".format(reference=self.reference,
-                    " ".format(reference=self.reference,
+                    "-A TransmissionDisequilibriumTest".format(reference=self.reference,
                             cores=cores, merged_vcf=merged_vcf_in, vcf_out=vcf_out)
+                    # "--variant {CEU_mergeGvcf} --variant {GBR_mergeGvcf} " \
+                    # "--variant {FIN_mergeGvcf}" \
                             # CEU_mergeGvcf=self.CEU_mergeGvcf, GBR_mergeGvcf=self.GBR_mergeGvcf,
                             # FIN_mergeGvcf=self.FIN_mergeGvcf)
         self.run_gatk('genotype_gvcf_gatk', gatk_args)

@@ -9,7 +9,7 @@ from stages import Stages
 def make_pipeline(state):
     '''Build the pipeline by constructing stages and connecting them together'''
     # Build an empty pipeline
-    pipeline = Pipeline(name='complexo')
+    pipeline = Pipeline(name='fampipeline')
     # Get a list of paths to all the FASTQ files
     fastq_files = state.config.get_option('fastqs')
     # Stages are dependent on the state
@@ -32,19 +32,22 @@ def make_pipeline(state):
         # This will be the first input to the stage.
         # We assume the sample name may consist of only alphanumeric
         # characters.
-        filter=formatter('.+/(?P<sample>[a-zA-Z0-9]+)_R1.fastq.gz'),
         # IF THE READS ARE SPLIT IN LANES e.g. FAM_f2_SM_f2i5_ID_idx46-TCCCGA-L001-L002_LB_lb_PL_ILLUMINA_R2
         # filter=formatter(
             # '.+/FAM_(?P<famid>[a-zA-Z0-9]+)_SM_(?P<sample>[a-zA-Z0-9-]+)_ID_(?P<runid>[a-zA-Z0-9-]+)_(?P<lib>[a-zA-Z0-9-]+)_(?P<lane>[a-zA-Z0-9]+)_R1.fastq.gz'),
+        filter=formatter('.+/FAM_(?P<fam>[a-zA-Z0-9]+)_SM_(?P<sample>[a-zA-Z0-9]+)' \
+                 '_ID_(?P<id>[a-zA-Z0-9-]+)_LB_(?P<lb>[a-zA-Z0-9]+)' \
+                 '_PL_(?P<pl>[a-zA-Z0-9]+)_R1.fastq.gz'),
         # Add one more inputs to the stage:
         #    1. The corresponding R2 FASTQ file
-        add_inputs=add_inputs('{path[0]}/{sample[0]}_R2.fastq.gz'),
+        add_inputs=add_inputs('{path[0]}/FAM_{fam[0]}_SM_{sample[0]}_ID_{id[0]}' \
+                              '_LB_{lb[0]}_PL_{pl[0]}_R2.fastq.gz'),
         # Add an "extra" argument to the state (beyond the inputs and outputs)
         # which is the sample name. This is needed within the stage for finding out
         # sample specific configuration options
-        extras=['{sample[0]}'],
+        extras=['{sample[0]}', '{id[0]}'],
         # The output file name is the sample name with a .bam extension.
-        output='{path[0]}/{sample[0]}.bam')
+        output='results/alignments/{sample[0]}/FAM_{fam[0]}_SM_{sample[0]}_ID_{id[0]}.bam')
 
     # Sort the BAM file using Picard
     pipeline.transform(
@@ -76,7 +79,7 @@ def make_pipeline(state):
         task_func=stages.local_realignment_gatk,
         name='local_realignment_gatk',
         input=output_from('chrom_intervals_gatk'),
-        filter=formatter('.+/(?P<sample>[a-zA-Z0-9]+).chr.intervals'),
+        filter=formatter('.+/(?P<sample>[a-zA-Z0-9_-]+).chr.intervals'),
         add_inputs=add_inputs('{path[0]}/{sample[0]}.sort.dedup.bam'),
         output='{path[0]}/{sample[0]}.sort.dedup.realn.bam')
         .follows('mark_duplicates_picard'))
@@ -94,7 +97,7 @@ def make_pipeline(state):
         task_func=stages.print_reads_gatk,
         name='print_reads_gatk',
         input=output_from('base_recalibration_gatk'),
-        filter=formatter('.+/(?P<sample>[a-zA-Z0-9]+).recal_data.csv'),
+        filter=formatter('.+/(?P<sample>[a-zA-Z0-9_-]+).recal_data.csv'),
         add_inputs=add_inputs('{path[0]}/{sample[0]}.sort.dedup.realn.bam'),
         output='{path[0]}/{sample[0]}.sort.dedup.realn.recal.bam')
         .follows('local_realignment_gatk'))
@@ -104,8 +107,8 @@ def make_pipeline(state):
         task_func=stages.call_variants_gatk,
         name='call_variants_gatk',
         input=output_from('print_reads_gatk'),
-        filter=suffix('.sort.dedup.realn.recal.bam'),
-        output='.raw.snps.indels.g.vcf')
+        filter=formatter('.+/(?P<sample>[a-zA-Z0-9_-]+).sort.dedup.realn.recal.bam'),
+        output='results/variants/{sample[0]}.raw.snps.indels.g.vcf')
 
     # Combine G.VCF files for all samples using GATK
     pipeline.merge(
