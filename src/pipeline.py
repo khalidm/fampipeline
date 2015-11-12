@@ -4,6 +4,7 @@ Build the pipeline workflow by plumbing the stages together.
 
 from ruffus import Pipeline, suffix, formatter, add_inputs, output_from
 from stages import Stages
+from utils import safe_make_dir
 
 
 def make_pipeline(state):
@@ -14,6 +15,11 @@ def make_pipeline(state):
     fastq_files = state.config.get_option('fastqs')
     # Stages are dependent on the state
     stages = Stages(state)
+
+    # Make directories for outputs
+    safe_make_dir('results')
+    safe_make_dir('results/alignments')
+    safe_make_dir('results/variants')
 
     # The original FASTQ files
     # This is a dummy stage. It is useful because it makes a node in the
