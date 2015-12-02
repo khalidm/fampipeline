@@ -232,7 +232,8 @@ def make_pipeline(state):
         name='apply_snp_recalibrate_gatk',
         input=output_from('genotype_gvcf_gatk'),
         filter=suffix('.genotyped.vcf'),
-        add_inputs=add_inputs(['FAMExomes.snp_recal', 'FAMExomes.snp_tranches']),
+        add_inputs=add_inputs(['results/variants/FAMExomes.snp_recal', 
+            'results/variants/FAMExomes.snp_tranches']),
         output='.recal_SNP.vcf')
         .follows('snp_recalibrate_gatk'))
 
@@ -242,7 +243,8 @@ def make_pipeline(state):
         name='apply_indel_recalibrate_gatk',
         input=output_from('genotype_gvcf_gatk'),
         filter=suffix('.genotyped.vcf'),
-        add_inputs=add_inputs(['FAMExomes.indel_recal', 'FAMExomes.indel_tranches']),
+        add_inputs=add_inputs(['results/variants/FAMExomes.indel_recal', 
+            'results/variants/FAMExomes.indel_tranches']),
         output='.recal_INDEL.vcf')
         .follows('indel_recalibrate_gatk'))
 
@@ -252,7 +254,7 @@ def make_pipeline(state):
         name='combine_variants_gatk',
         input=output_from('apply_snp_recalibrate_gatk'),
         filter=suffix('.recal_SNP.vcf'),
-        add_inputs=add_inputs(['FAMExomes.recal_INDEL.vcf']),
+        add_inputs=add_inputs(['results/variants/FAMExomes.recal_INDEL.vcf']),
         output='.combined.vcf')
         .follows('apply_indel_recalibrate_gatk'))
 
