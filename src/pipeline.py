@@ -5,7 +5,8 @@ Build the pipeline workflow by plumbing the stages together.
 from ruffus import Pipeline, suffix, formatter, add_inputs, output_from
 from stages import Stages
 from utils import safe_make_dir
-
+from collections import Counter, defaultdict
+import re
 
 def make_pipeline(state):
     '''Build the pipeline by constructing stages and connecting them together'''
@@ -21,11 +22,40 @@ def make_pipeline(state):
     safe_make_dir('results/alignments')
     safe_make_dir('results/variants')
 
+    #XXX Note: Temporary solution to treat multi- and single- lane samples differently
+    # Check if multiple lanes per sample. 
+    #print(fastq_files)
+    sample_info = [re.search('.+/(FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+))_(ID_[A-Za-z0-9-]+)_.+R([0-9]).fastq.gz',
+                             filename) for filename in fastq_files]
+    #print([samp.group(2) for samp in sample_info])
+    sample_count = Counter([samp.group(1) for samp in sample_info])
+    #print(sample_count)
+    single_lane = [samp for samp, count in sample_count.iteritems() if count == 2]
+    #print(single_lane)
+    multi_lane = [samp for samp, count in sample_count.iteritems() if count > 2 and count % 2 == 0]
+    #print(multi_lane)
+    assert(len(multi_lane + single_lane) == len(sample_count))
+
+    # Define inputs for merge_bams
+    merge_bams_input = ['results/alignments/{fam_sm}/{fam_sm}_{id}.sort.dedup.realn' \
+                        '.recal.bam'.format(fam_sm=samp.group(1), sm=samp.group(2), id=samp.group(3)) 
+                        for samp in sample_info if samp.group(1) in multi_lane and samp.group(4) == "1"]
+    print(merge_bams_input)
+
+    # Define inputs for call_variants_gatk
+    single_lane_processed_bams = ['results/alignments/{fam_sm}/{fam_sm}_{id}.sort.dedup.realn' \
+                                  '.recal.bam'.format(fam_sm=samp.group(1), sm=samp.group(2), id=samp.group(3))
+                                   for samp in sample_info if samp.group(1) in single_lane and samp.group(4) == "1"]
+    multi_lane_processed_bams = ['results/alignments/{fam_sm}/{fam_sm}.merged.dedup.realn' \
+                                 '.bam'.format(fam_sm=fam_sm, sm=re.search('FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+)', fam_sm).group(1))
+                                  for fam_sm in multi_lane]
+    call_variants_gatk_input = single_lane_processed_bams + multi_lane_processed_bams
+
     # The original FASTQ files
     # This is a dummy stage. It is useful because it makes a node in the
     # pipeline graph, and gives the pipeline an obvious starting point.
     pipeline.originate(
-        task_func=stages.original_fastqs,
+        task_func=stages.do_nothing,
         name='original_fastqs',
         output=fastq_files)
 
@@ -51,9 +81,9 @@ def make_pipeline(state):
         # Add an "extra" argument to the state (beyond the inputs and outputs)
         # which is the sample name. This is needed within the stage for finding out
         # sample specific configuration options
-        extras=['{sample[0]}', '{id[0]}'],
+        extras=['{fam[0]}', '{sample[0]}', '{id[0]}'],
         # The output file name is the sample name with a .bam extension.
-        output='results/alignments/{sample[0]}/FAM_{fam[0]}_SM_{sample[0]}_ID_{id[0]}.bam')
+        output='results/alignments/FAM_{fam[0]}_SM_{sample[0]}/FAM_{fam[0]}_SM_{sample[0]}_ID_{id[0]}.bam')
 
     # Sort the BAM file using Picard
     pipeline.transform(
@@ -108,20 +138,69 @@ def make_pipeline(state):
         output='{path[0]}/{sample[0]}.sort.dedup.realn.recal.bam')
         .follows('local_realignment_gatk'))
 
-    # Call variants using GATK
+    # Define multi_lane_bams
+    (pipeline.originate(
+        task_func=stages.do_nothing,
+        name='define_multi_lane_bams',
+        output=merge_bams_input)
+        .follows('print_reads_gatk'))
+
+    # Merge multi-lane bams
+    pipeline.collate(
+        task_func=stages.merge_bams,
+        name='merge_bams',
+        input=output_from('define_multi_lane_bams'),
+        filter=formatter('.+/(?P<sample>[a-zA-Z0-9_-]+)_ID_.+.sort.dedup.realn.recal.bam'),
+        output='results/alignments/{sample[0]}/{sample[0]}.merged.bam')
+
+    # Mark duplicates 2 on multi-lane samples using Picard
     pipeline.transform(
+        task_func=stages.mark_duplicates_picard,
+        name='mark_duplicates_2',
+        input=output_from('merge_bams'),
+        filter=suffix('.merged.bam'),
+        output=['.merged.dedup.bam', '.metricsdup'])
+
+    # Generate chromosome intervals using GATK (2)
+    pipeline.transform(
+        task_func=stages.chrom_intervals_gatk,
+        name='chrom_intervals_gatk_2',
+        input=output_from('mark_duplicates_2'),
+        filter=suffix('.merged.dedup.bam'),
+        output='.chr.intervals')
+
+    # Local realignment 2 using GATK
+    (pipeline.transform(
+        task_func=stages.local_realignment_gatk,
+        name='local_realignment_2',
+        input=output_from('chrom_intervals_gatk_2'),
+        filter=formatter('.+/(?P<sample>[a-zA-Z0-9_-]+).chr.intervals'),
+        add_inputs=add_inputs('{path[0]}/{sample[0]}.merged.dedup.bam'),
+        output='{path[0]}/{sample[0]}.merged.dedup.realn.bam')
+        .follows('mark_duplicates_2'))
+
+    # Define processed bams
+    (pipeline.originate(
+         task_func=stages.do_nothing,
+        name='define_processed_bams',
+        output=call_variants_gatk_input)
+        .follows('local_realignment_2')
+        .follows('print_reads_gatk'))
+
+    # Call variants using GATK
+    (pipeline.transform(
         task_func=stages.call_variants_gatk,
         name='call_variants_gatk',
-        input=output_from('print_reads_gatk'),
-        filter=formatter('.+/(?P<sample>[a-zA-Z0-9_-]+).sort.dedup.realn.recal.bam'),
-        output='results/variants/{sample[0]}.raw.snps.indels.g.vcf')
+        input=output_from('define_processed_bams'),
+        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
+        output='results/variants/{sample[0]}.raw.snps.indels.g.vcf'))
 
     # Combine G.VCF files for all samples using GATK
     pipeline.merge(
         task_func=stages.combine_gvcf_gatk,
         name='combine_gvcf_gatk',
         input=output_from('call_variants_gatk'),
-        output='FAMExomes.mergegvcf.vcf')
+        output='results/variants/FAMExomes.mergegvcf.vcf')
 
     # Genotype G.VCF files using GATK
     pipeline.transform(

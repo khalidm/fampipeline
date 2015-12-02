@@ -11,7 +11,8 @@ from utils import safe_make_dir
 from runner import run_stage
 import os
 
-PICARD_JAR = '$PICARD_HOME/lib/picard.jar'
+#PICARD_JAR = '$PICARD_HOME/lib/picard.jar'   # Path on Barcoo
+PICARD_JAR = '$PICARD_HOME/picard.jar'       # Path on Snowy
 GATK_JAR = '$GATK_HOME/GenomeAnalysisTK.jar'
 
 def java_command(jar_path, mem_in_gb, command_args):
@@ -61,12 +62,12 @@ class Stages(object):
         return self.state.config.get_options(*options)
 
 
-    def original_fastqs(self, output):
-        '''Original fastq files'''
+    def do_nothing(self, output):
+        '''Do nothing'''
         pass
 
 
-    def align_bwa(self, inputs, bam_out, sample, id):
+    def align_bwa(self, inputs, bam_out, fam, sample, id):
         '''Align the paired end fastq files to the reference genome using bwa'''
         fastq_read1_in, fastq_read2_in = inputs
         cores = self.get_stage_options('align_bwa', 'cores')
@@ -79,7 +80,7 @@ class Stages(object):
                       fastq_read2=fastq_read2_in,
                       reference=self.reference,
                       bam=bam_out)
-        safe_make_dir('results/alignments/{sample}'.format(sample=sample))
+        safe_make_dir('results/alignments/FAM_{fam}_SM_{sample}'.format(fam=fam, sample=sample))
         run_stage(self.state, 'align_bwa', command)
 
 
@@ -155,6 +156,17 @@ class Stages(object):
                     "-o {out} --num_cpu_threads_per_data_thread 4".format(reference=self.reference,
                             bam=bam_in, recal_csv=csv_in, out=bam_out)
         self.run_gatk('print_reads_gatk', gatk_args)
+
+
+    def merge_bams(self, bam_files_in, bam_out):
+        '''Merge per lane bam into a merged bam file'''
+        bam_files = ' '.join(['INPUT=' + bam for bam in bam_files_in])
+        picard_args = 'MergeSamFiles {bams_in} OUTPUT={merged_bam_out} ' \
+                      'VALIDATION_STRINGENCY=LENIENT ' \
+                      'MAX_RECORDS_IN_RAM=5000000 ASSUME_SORTED=True ' \
+                      'CREATE_INDEX=True'.format(
+                          bams_in=bam_files, merged_bam_out=bam_out)
+        self.run_picard('merge_bams', picard_args) 
 
 
     def call_variants_gatk(self, bam_in, vcf_out):
