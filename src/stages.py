@@ -214,8 +214,8 @@ class Stages(object):
                     "-A Coverage -A DepthPerAlleleBySample " \
                     "-A DepthPerSampleHC -A FisherStrand " \
                     "-A GCContent -A GenotypeSummaries " \
-                    "-A HardyWeinberg -A HomopolymerRun " \
-                    "-A LikelihoodRankSumTest -A LowMQ " \
+                    "-A HardyWeinberg " \
+                    "-A LikelihoodRankSumTest " \
                     "-A MappingQualityRankSumTest -A MappingQualityZero " \
                     "-A QualByDepth " \
                     "-A RMSMappingQuality -A ReadPosRankSumTest " \
