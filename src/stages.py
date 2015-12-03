@@ -326,6 +326,8 @@ class Stages(object):
     def rare_variants_famseq(self, selected_vcf, vcf_out):
         '''Call rare variants with pedigree information using FamSeq'''
         # e.g. FamSeq vcf -vcfFile ../TestData/test.vcf -pedFile ../TestData/fam01.ped -output test.FamSeq.vcf -v
-        command = "FamSeq vcf -vcfFile {selected_vcf} -pedFile {ped_file} -output {vcf_out}".format(selected_vcf=selected_vcf,
+        # FamSeq methods - 1: Bayesian network; 2: Elston-Stewart algorithm; 3: MCMC
+        command = "PATH=/vlsci/LSC0007/shared/jessica_testing/software/FamSeq/src/:$PATH ; " \
+                  "FamSeq vcf -method 2 -vcfFile {selected_vcf} -pedFile {ped_file} -output {vcf_out}".format(selected_vcf=selected_vcf,
                             ped_file=self.famseq_ped_file, vcf_out=vcf_out)
         run_stage(self.state, 'rare_variants_famseq', command)
