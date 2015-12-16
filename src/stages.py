@@ -331,3 +331,22 @@ class Stages(object):
                   "FamSeq vcf -method 2 -vcfFile {selected_vcf} -pedFile {ped_file} -output {vcf_out}".format(selected_vcf=selected_vcf,
                             ped_file=self.famseq_ped_file, vcf_out=vcf_out)
         run_stage(self.state, 'rare_variants_famseq', command)
+
+
+#    def coverage_bamtools(self, bam_in, outputs):
+#        '''Get coverage statistics using BamTools'''
+#        command = "bamtools coverage -in {bam} -out {out}".format(bam=bam_in, out=outputs)
+#        run_stage(self.state, 'coverage_bamtools', command)
+
+    def coverage_bedtools(self, bam_in, outputs):
+        '''Get coverage of each exon'''
+        command = "bedtools coverage -abam {bam} -b {bed} > {out}".format(bam=bam_in, 
+                          bed=self.interval_hg19, out=outputs)
+        run_stage(self.state, 'coverage_bedtools', command)
+
+    def alignment_stats_bamtools(self, bam_in, outputs):
+        '''Get alignment stats using Bamtools'''
+        command = "bamtools stats -in {bam} > {out}".format(bam=bam_in, out=outputs)
+        run_stage(self.state, 'alignment_stats_bamtools', command)
+
+

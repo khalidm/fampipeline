@@ -21,6 +21,7 @@ def make_pipeline(state):
     safe_make_dir('results')
     safe_make_dir('results/alignments')
     safe_make_dir('results/variants')
+    safe_make_dir('results/qc')
 
     #XXX Note: Temporary solution to treat multi- and single- lane samples differently
     # Check if multiple lanes per sample. 
@@ -281,5 +282,29 @@ def make_pipeline(state):
         input=output_from('select_variants_gatk'),
         filter=suffix('.selected.vcf'),
         output='.famseq.vcf')
+
+#    # Get coverage statistics with BamTools
+#    pipeline.transform(
+#        task_func=stages.coverage_bamtools,
+#        name='coverage_bamtools',
+#        input=output_from('define_processed_bams'),
+#        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
+#        output='results/qc/{sample[0]}.coverage.txt')
+
+    # Get coverage for each exon with BedTools
+    pipeline.transform(
+        task_func=stages.coverage_bedtools,
+        name='coverage_bedtools',
+        input=output_from('define_processed_bams'),
+        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
+        output='results/qc/{sample[0]}.exon_coverages.txt')
+
+    # Get alignment statistics with BamTools
+    pipeline.transform(
+        task_func=stages.alignment_stats_bamtools,
+        name='alignment_stats_bamtools',
+        input=output_from('define_processed_bams'),
+        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
+        output='results/qc/{sample[0]}.alignment_stats.txt')
 
     return pipeline
