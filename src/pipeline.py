@@ -193,7 +193,7 @@ def make_pipeline(state):
         task_func=stages.call_variants_gatk,
         name='call_variants_gatk',
         input=output_from('define_processed_bams'),
-        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
+        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn(.recal)?.bam'),
         output='results/variants/{sample[0]}.raw.snps.indels.g.vcf'))
 
     # Combine G.VCF files for all samples using GATK
@@ -283,20 +283,12 @@ def make_pipeline(state):
         filter=suffix('.selected.vcf'),
         output='.famseq.vcf')
 
-#    # Get coverage statistics with BamTools
-#    pipeline.transform(
-#        task_func=stages.coverage_bamtools,
-#        name='coverage_bamtools',
-#        input=output_from('define_processed_bams'),
-#        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
-#        output='results/qc/{sample[0]}.coverage.txt')
-
     # Get coverage for each exon with BedTools
     pipeline.transform(
         task_func=stages.coverage_bedtools,
         name='coverage_bedtools',
         input=output_from('define_processed_bams'),
-        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
+        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn(.recal)?.bam'),
         output='results/qc/{sample[0]}.exon_coverages.txt')
 
     # Get alignment statistics with BamTools
@@ -304,7 +296,7 @@ def make_pipeline(state):
         task_func=stages.alignment_stats_bamtools,
         name='alignment_stats_bamtools',
         input=output_from('define_processed_bams'),
-        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn.bam'),
+        filter=formatter('.+/(?P<sample>FAM_[a-zA-Z0-9]+_SM_[a-zA-Z0-9]+)[_.].+.dedup.realn(.recal)?.bam'),
         output='results/qc/{sample[0]}.alignment_stats.txt')
 
     return pipeline
