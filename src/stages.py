@@ -11,8 +11,8 @@ from utils import safe_make_dir
 from runner import run_stage
 import os
 
-#PICARD_JAR = '$PICARD_HOME/lib/picard.jar'   # Path on Barcoo
-PICARD_JAR = '$PICARD_HOME/picard.jar'       # Path on Snowy
+PICARD_JAR = '$PICARD_HOME/lib/picard.jar'   # Path on Barcoo
+#PICARD_JAR = '$PICARD_HOME/picard.jar'       # Path on Snowy
 GATK_JAR = '$GATK_HOME/GenomeAnalysisTK.jar'
 
 def java_command(jar_path, mem_in_gb, command_args):
@@ -173,7 +173,7 @@ class Stages(object):
         '''Call variants using GATK'''
         gatk_args = "-T HaplotypeCaller -R {reference} " \
                     "--emitRefConfidence GVCF " \
-                    "--num_cpu_threads_per_data_thread 8 " \
+                    "--num_cpu_threads_per_data_thread 1 " \
                     "-A AlleleBalance -A AlleleBalanceBySample " \
                     "-A ChromosomeCounts -A ClippingRankSumTest " \
                     "-A Coverage -A DepthPerAlleleBySample " \
