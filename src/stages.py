@@ -42,9 +42,9 @@ class Stages(object):
         self.interval_hg19 = self.get_options('interval_hg19')
         self.ped_file = self.get_options('ped_file')
         self.famseq_ped_file = self.get_options('famseq_ped_file')
-        # self.CEU_mergeGvcf = self.get_options('CEU_mergeGvcf')
-        # self.GBR_mergeGvcf = self.get_options('GBR_mergeGvcf')
-        # self.FIN_mergeGvcf = self.get_options('FIN_mergeGvcf')
+        self.CEU_mergeGvcf = self.get_options('CEU_mergeGvcf')
+        self.GBR_mergeGvcf = self.get_options('GBR_mergeGvcf')
+        self.FIN_mergeGvcf = self.get_options('FIN_mergeGvcf')
 
     def run_picard(self, stage, args):
         mem = int(self.state.config.get_stage_options(stage, 'mem'))
@@ -199,7 +199,7 @@ class Stages(object):
         gatk_args = "-T CombineGVCFs -R {reference} " \
                     "--disable_auto_index_creation_and_locking_when_reading_rods " \
                     "{g_vcf_files} -o {vcf_out}".format(reference=self.reference,
-                        g_vcf_files=g_vcf_files, vcf_out=vcf_out)
+                            g_vcf_files=g_vcf_files, vcf_out=vcf_out)
         self.run_gatk('combine_gvcf_gatk', gatk_args)
 
 
@@ -208,27 +208,17 @@ class Stages(object):
         cores = self.get_stage_options('genotype_gvcf_gatk', 'cores')
         gatk_args = "-T GenotypeGVCFs -R {reference} " \
                     "--disable_auto_index_creation_and_locking_when_reading_rods " \
-                    "--num_threads {cores} --variant {merged_vcf} --out {vcf_out} " \
-                    "-A AlleleBalance -A AlleleBalanceBySample " \
-                    "-A ChromosomeCounts -A ClippingRankSumTest " \
-                    "-A Coverage -A DepthPerAlleleBySample " \
-                    "-A DepthPerSampleHC -A FisherStrand " \
-                    "-A GCContent -A GenotypeSummaries " \
-                    "-A HardyWeinberg " \
-                    "-A LikelihoodRankSumTest " \
-                    "-A MappingQualityRankSumTest -A MappingQualityZero " \
-                    "-A QualByDepth " \
-                    "-A RMSMappingQuality -A ReadPosRankSumTest " \
-                    "-A SampleList -A SpanningDeletions " \
-                    "-A StrandBiasBySample -A StrandOddsRatio " \
-                    "-A TandemRepeatAnnotator -A VariantType " \
-                    "-A TransmissionDisequilibriumTest".format(reference=self.reference,
-                            cores=cores, merged_vcf=merged_vcf_in, vcf_out=vcf_out)
-                    # "--variant {CEU_mergeGvcf} --variant {GBR_mergeGvcf} " \
-                    # "--variant {FIN_mergeGvcf}" \
-                            # CEU_mergeGvcf=self.CEU_mergeGvcf, GBR_mergeGvcf=self.GBR_mergeGvcf,
-                            # FIN_mergeGvcf=self.FIN_mergeGvcf)
-        self.run_gatk('genotype_gvcf_gatk', gatk_args)
+                    "--num_threads {cores} " \
+                    "-L {interval_hg19} " \
+                    "--variant {merged_vcf_in} " \
+                    "--variant {CEU_mergeGvcf} " \
+                    "--variant {GBR_mergeGvcf} " \
+                    "--variant {FIN_mergeGvcf} " \
+                    "--out {vcf_out}".format(reference=self.reference, cores=cores, 
+                            interval_hg19=self.interval_hg19, merged_vcf_in=merged_vcf_in, 
+                            CEU_mergeGvcf=self.CEU_mergeGvcf, GBR_mergeGvcf=self.GBR_mergeGvcf,
+                            FIN_mergeGvcf=self.FIN_mergeGvcf, vcf_out=vcf_out)
+        self.run_gatk('genotype_gvcf_gatk', gatk_args) 
 
 
     def snp_recalibrate_gatk(self, genotype_vcf_in, outputs):
