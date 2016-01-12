@@ -309,7 +309,8 @@ class Stages(object):
     def select_variants_gatk(self, filtered_vcf, vcf_out):
         '''Select variants using GATK'''
         gatk_args = "-T SelectVariants -R {reference} --disable_auto_index_creation_and_locking_when_reading_rods " \
-                    "--variant {filtered_vcf} --excludeFiltered -o {vcf_out}".format(reference=self.reference,
+                    "--variant {filtered_vcf} --excludeNonVariants --excludeFiltered " \
+                    "-se 'f[0-9]+i[0-9]+' -o {vcf_out}".format(reference=self.reference,
                             filtered_vcf=filtered_vcf, vcf_out=vcf_out)
         self.run_gatk('select_variants_gatk', gatk_args)
 
