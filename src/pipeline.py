@@ -41,7 +41,7 @@ def make_pipeline(state):
     merge_bams_input = ['results/alignments/{fam_sm}/{fam_sm}_{id}.sort.dedup.realn' \
                         '.recal.bam'.format(fam_sm=samp.group(1), sm=samp.group(2), id=samp.group(3)) 
                         for samp in sample_info if samp.group(1) in multi_lane and samp.group(4) == "1"]
-    print(merge_bams_input)
+    #print(merge_bams_input)
 
     # Define inputs for call_variants_gatk
     single_lane_processed_bams = ['results/alignments/{fam_sm}/{fam_sm}_{id}.sort.dedup.realn' \
@@ -274,6 +274,14 @@ def make_pipeline(state):
         input=output_from('filter_variants_gatk'),
         filter=suffix('.filtered.vcf'),
         output='.selected.vcf')
+
+    # Select variants using GATK (only fam samples)
+    pipeline.transform(
+        task_func=stages.select_fam_variants_gatk,
+        name='select_fam_variants_gatk',
+        input=output_from('filter_variants_gatk'),
+        filter=suffix('.filtered.vcf'),
+        output='.selected.fam.vcf')
 
     # Rare variant genotyping using FamSeq
     pipeline.transform(
