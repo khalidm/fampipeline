@@ -43,11 +43,11 @@ def make_pipeline(state):
             # '.+/FAM_(?P<famid>[a-zA-Z0-9]+)_SM_(?P<sample>[a-zA-Z0-9-]+)_ID_(?P<runid>[a-zA-Z0-9-]+)_(?P<lib>[a-zA-Z0-9-]+)_(?P<lane>[a-zA-Z0-9]+)_R1.fastq.gz'),
         filter=formatter('.+/FAM_(?P<fam>[a-zA-Z0-9]+)_SM_(?P<sample>[a-zA-Z0-9]+)' \
                  '_ID_(?P<id>[a-zA-Z0-9-]+)_LB_(?P<lb>[a-zA-Z0-9]+)' \
-                 '_PL_(?P<pl>[a-zA-Z0-9]+)_R1.fastq.gz'),
+                 '_PL_(?P<pl>[a-zA-Z0-9]+)_R1.fastq'),
         # Add one more inputs to the stage:
         #    1. The corresponding R2 FASTQ file
         add_inputs=add_inputs('{path[0]}/FAM_{fam[0]}_SM_{sample[0]}_ID_{id[0]}' \
-                              '_LB_{lb[0]}_PL_{pl[0]}_R2.fastq.gz'),
+                              '_LB_{lb[0]}_PL_{pl[0]}_R2.fastq'),
         # Add an "extra" argument to the state (beyond the inputs and outputs)
         # which is the sample name. This is needed within the stage for finding out
         # sample specific configuration options
