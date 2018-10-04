@@ -11,8 +11,8 @@ from utils import safe_make_dir
 from runner import run_stage
 import os
 
-PICARD_JAR = '$PICARD_HOME/lib/picard.jar'
-GATK_JAR = '$GATK_HOME/GenomeAnalysisTK.jar'
+PICARD_JAR = '$EBROOTPICARD/picard.jar'
+GATK_JAR = '$EBROOTGATK/GenomeAnalysisTK.jar'
 
 def java_command(jar_path, mem_in_gb, command_args):
     '''Build a string for running a java command'''
