@@ -14,7 +14,7 @@ MEGABYTES_IN_GIGABYTE = 1024
 SLURM options:
 
 --account=name          Charge job to specified accounts
---exclusive             Allocate nodenumber of tasks to invoke on each nodes 
+--exclusive             Allocate nodenumber of tasks to invoke on each nodes
                         in exclusive mode when cpu consumable resource is
                         enabled
 --mem=MB                Minimum amount of real memory
@@ -39,7 +39,7 @@ def run_stage(state, stage, command):
     # Grab the configuration options for this stage
     config = state.config
     modules = config.get_stage_option(stage, 'modules')
-    mem = config.get_stage_option(stage, 'mem') * MEGABYTES_IN_GIGABYTE 
+    mem = config.get_stage_option(stage, 'mem') * MEGABYTES_IN_GIGABYTE
     account = config.get_stage_option(stage, 'account')
     queue = config.get_stage_option(stage, 'queue')
     walltime = config.get_stage_option(stage, 'walltime')
@@ -76,9 +76,9 @@ def run_stage(state, stage, command):
                 run_locally = run_local,
                 # Keep a copy of the job script for diagnostic purposes
                 retain_job_scripts = True,
-                retain_stdout = True,
-                retain_stderr = True,
-                job_script_directory = state.options.jobscripts, 
+                # retain_stdout = True,
+                # retain_stderr = True,
+                job_script_directory = state.options.jobscripts,
                 job_other_options = job_options)
     except error_drmaa_job as err:
         raise Exception("\n".join(map(str, ["Failed to run:", command, err, stdout_res, stderr_res])))
