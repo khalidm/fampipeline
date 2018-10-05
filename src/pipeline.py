@@ -36,7 +36,7 @@ def make_pipeline(state):
     single_lane = [samp for samp, count in sample_count.iteritems() if count == 2]
     # print(single_lane)
     multi_lane = [samp for samp, count in sample_count.iteritems() if count > 2 and count % 2 == 0]
-    # print(multi_lane)
+    print(multi_lane)
     assert(len(multi_lane + single_lane) == len(sample_count))
 
     # Define inputs for merge_bams
