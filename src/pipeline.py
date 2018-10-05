@@ -27,7 +27,7 @@ def make_pipeline(state):
     # Check if multiple lanes per sample.
     # FAM_f1_SM_SAMPLE1_ID_H5YV2DSXX-GTCTGTCA-L004_LB_lb_PL_ILLUMINA_R1.fastq
     # print(fastq_files)
-    sample_info = [re.search('.+/(FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+))_(ID_[A-Za-z0-9-]+)_.+R([0-9]).fastq.gz',
+    sample_info = [re.search('.+/(FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+))_ID_[A-Za-z0-9-]+_.+R([0-9]).fastq.gz',
                              filename) for filename in fastq_files]
     print sample_info
     print([samp.group(2) for samp in sample_info])
