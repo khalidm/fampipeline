@@ -25,7 +25,7 @@ def make_pipeline(state):
 
     #XXX Note: Temporary solution to treat multi- and single- lane samples differently
     # Check if multiple lanes per sample.
-    #print(fastq_files)
+    print(fastq_files)
     sample_info = [re.search('.+/(FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+))_(ID_[A-Za-z0-9-]+)_.+R([0-9]).fastq.gz',
                              filename) for filename in fastq_files]
     #print([samp.group(2) for samp in sample_info])
