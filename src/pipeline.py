@@ -27,16 +27,16 @@ def make_pipeline(state):
     # Check if multiple lanes per sample.
     # FAM_f1_SM_SAMPLE1_ID_H5YV2DSXX-GTCTGTCA-L004_LB_lb_PL_ILLUMINA_R1.fastq
     # print(fastq_files)
-    sample_info = [re.search('.+/(FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+))_(ID_[A-Za-z0-9-]+)_LB_lb_PL_ILLUMINA_R([0-9]).fastq.gz',
+    sample_info = [re.search('.+/(FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+))_(ID_[A-Za-z0-9-]+)_LB_lb_PL_ILLUMINA_R([0-9]).fastq',
                              filename) for filename in fastq_files]
-    print sample_info
-    print([samp.group(2) for samp in sample_info])
+    # print sample_info
+    # print([samp.group(2) for samp in sample_info])
     sample_count = Counter([samp.group(1) for samp in sample_info])
-    print(sample_count)
+    # print(sample_count)
     single_lane = [samp for samp, count in sample_count.iteritems() if count == 2]
-    print(single_lane)
+    # print(single_lane)
     multi_lane = [samp for samp, count in sample_count.iteritems() if count > 2 and count % 2 == 0]
-    print(multi_lane)
+    # print(multi_lane)
     assert(len(multi_lane + single_lane) == len(sample_count))
 
     # Define inputs for merge_bams
@@ -76,11 +76,11 @@ def make_pipeline(state):
             # '.+/FAM_(?P<famid>[a-zA-Z0-9]+)_SM_(?P<sample>[a-zA-Z0-9-]+)_ID_(?P<runid>[a-zA-Z0-9-]+)_(?P<lib>[a-zA-Z0-9-]+)_(?P<lane>[a-zA-Z0-9]+)_R1.fastq.gz'),
         filter=formatter('.+/FAM_(?P<fam>[a-zA-Z0-9]+)_SM_(?P<sample>[a-zA-Z0-9]+)' \
                  '_ID_(?P<id>[a-zA-Z0-9-]+)_LB_(?P<lb>[a-zA-Z0-9]+)' \
-                 '_PL_(?P<pl>[a-zA-Z0-9]+)_R[12].fastq.gz'),
+                 '_PL_(?P<pl>[a-zA-Z0-9]+)_R[12].fastq'),
         # Add one more inputs to the stage:
         #    1. The corresponding R2 FASTQ file
         add_inputs=add_inputs('{path[0]}/FAM_{fam[0]}_SM_{sample[0]}_ID_{id[0]}' \
-                              '_LB_{lb[0]}_PL_{pl[0]}_R2.fastq.gz'),
+                              '_LB_{lb[0]}_PL_{pl[0]}_R2.fastq'),
         # Add an "extra" argument to the state (beyond the inputs and outputs)
         # which is the sample name. This is needed within the stage for finding out
         # sample specific configuration options
