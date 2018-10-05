@@ -42,9 +42,9 @@ class Stages(object):
         self.interval_hg19 = self.get_options('interval_hg19')
         self.ped_file = self.get_options('ped_file')
         self.famseq_ped_file = self.get_options('famseq_ped_file')
-        self.CEU_mergeGvcf = self.get_options('CEU_mergeGvcf')
-        self.GBR_mergeGvcf = self.get_options('GBR_mergeGvcf')
-        self.FIN_mergeGvcf = self.get_options('FIN_mergeGvcf')
+        # self.CEU_mergeGvcf = self.get_options('CEU_mergeGvcf')
+        # self.GBR_mergeGvcf = self.get_options('GBR_mergeGvcf')
+        # self.FIN_mergeGvcf = self.get_options('FIN_mergeGvcf')
 
     def run_picard(self, stage, args):
         mem = int(self.state.config.get_stage_options(stage, 'mem'))
@@ -166,7 +166,7 @@ class Stages(object):
                       'MAX_RECORDS_IN_RAM=5000000 ASSUME_SORTED=True ' \
                       'CREATE_INDEX=True'.format(
                           bams_in=bam_files, merged_bam_out=bam_out)
-        self.run_picard('merge_bams', picard_args) 
+        self.run_picard('merge_bams', picard_args)
 
 
     def call_variants_gatk(self, bam_in, vcf_out):
@@ -211,14 +211,10 @@ class Stages(object):
                     "--num_threads {cores} " \
                     "-L {interval_hg19} " \
                     "--variant {merged_vcf_in} " \
-                    "--variant {CEU_mergeGvcf} " \
-                    "--variant {GBR_mergeGvcf} " \
-                    "--variant {FIN_mergeGvcf} " \
-                    "--out {vcf_out}".format(reference=self.reference, cores=cores, 
-                            interval_hg19=self.interval_hg19, merged_vcf_in=merged_vcf_in, 
-                            CEU_mergeGvcf=self.CEU_mergeGvcf, GBR_mergeGvcf=self.GBR_mergeGvcf,
-                            FIN_mergeGvcf=self.FIN_mergeGvcf, vcf_out=vcf_out)
-        self.run_gatk('genotype_gvcf_gatk', gatk_args) 
+                    "--out {vcf_out}".format(reference=self.reference, cores=cores,
+                            interval_hg19=self.interval_hg19, merged_vcf_in=merged_vcf_in,
+                            vcf_out=vcf_out)
+        self.run_gatk('genotype_gvcf_gatk', gatk_args)
 
 
     def snp_recalibrate_gatk(self, genotype_vcf_in, outputs):
@@ -339,7 +335,7 @@ class Stages(object):
 
     def coverage_bedtools(self, bam_in, outputs):
         '''Get coverage of each exon'''
-        command = "bedtools coverage -abam {bam} -b {bed} > {out}".format(bam=bam_in, 
+        command = "bedtools coverage -abam {bam} -b {bed} > {out}".format(bam=bam_in,
                           bed=self.interval_hg19, out=outputs)
         run_stage(self.state, 'coverage_bedtools', command)
 
@@ -347,5 +343,3 @@ class Stages(object):
         '''Get alignment stats using Bamtools'''
         command = "bamtools stats -in {bam} > {out}".format(bam=bam_in, out=outputs)
         run_stage(self.state, 'alignment_stats_bamtools', command)
-
-
