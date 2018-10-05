@@ -24,22 +24,22 @@ def make_pipeline(state):
     safe_make_dir('results/qc')
 
     #XXX Note: Temporary solution to treat multi- and single- lane samples differently
-    # Check if multiple lanes per sample. 
+    # Check if multiple lanes per sample.
     #print(fastq_files)
     sample_info = [re.search('.+/(FAM_[a-zA-Z0-9]+_SM_([a-zA-Z0-9]+))_(ID_[A-Za-z0-9-]+)_.+R([0-9]).fastq.gz',
                              filename) for filename in fastq_files]
     #print([samp.group(2) for samp in sample_info])
     sample_count = Counter([samp.group(1) for samp in sample_info])
-    #print(sample_count)
+    print(sample_count)
     single_lane = [samp for samp, count in sample_count.iteritems() if count == 2]
-    #print(single_lane)
+    print(single_lane)
     multi_lane = [samp for samp, count in sample_count.iteritems() if count > 2 and count % 2 == 0]
-    #print(multi_lane)
+    print(multi_lane)
     assert(len(multi_lane + single_lane) == len(sample_count))
 
     # Define inputs for merge_bams
     merge_bams_input = ['results/alignments/{fam_sm}/{fam_sm}_{id}.sort.dedup.realn' \
-                        '.recal.bam'.format(fam_sm=samp.group(1), sm=samp.group(2), id=samp.group(3)) 
+                        '.recal.bam'.format(fam_sm=samp.group(1), sm=samp.group(2), id=samp.group(3))
                         for samp in sample_info if samp.group(1) in multi_lane and samp.group(4) == "1"]
     #print(merge_bams_input)
 
@@ -233,7 +233,7 @@ def make_pipeline(state):
         name='apply_snp_recalibrate_gatk',
         input=output_from('genotype_gvcf_gatk'),
         filter=suffix('.genotyped.vcf'),
-        add_inputs=add_inputs(['results/variants/FAMExomes.snp_recal', 
+        add_inputs=add_inputs(['results/variants/FAMExomes.snp_recal',
             'results/variants/FAMExomes.snp_tranches']),
         output='.recal_SNP.vcf')
         .follows('snp_recalibrate_gatk'))
@@ -244,7 +244,7 @@ def make_pipeline(state):
         name='apply_indel_recalibrate_gatk',
         input=output_from('genotype_gvcf_gatk'),
         filter=suffix('.genotyped.vcf'),
-        add_inputs=add_inputs(['results/variants/FAMExomes.indel_recal', 
+        add_inputs=add_inputs(['results/variants/FAMExomes.indel_recal',
             'results/variants/FAMExomes.indel_tranches']),
         output='.recal_INDEL.vcf')
         .follows('indel_recalibrate_gatk'))
