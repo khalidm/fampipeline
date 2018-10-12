@@ -121,7 +121,7 @@ def make_pipeline(state):
         task_func=stages.combine_gvcf_gatk,
         name='combine_gvcf_gatk',
         input=output_from('call_variants_gatk'),
-        output='FAMExomes.mergegvcf.vcf')
+        output='results/variants/FAMExomes.mergegvcf.vcf')
 
     # Genotype G.VCF files using GATK
     pipeline.transform(
