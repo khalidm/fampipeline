@@ -283,7 +283,7 @@ class Stages(object):
                     "--filterExpression \"QUAL < 30.0\" --filterName \"VeryLowQual\" " \
                     "--filterExpression \"QD < 2.0\" --filterName \"LowQD\" " \
                     "--filterExpression \"DP < 10\" --filterName \"LowCoverage\" " \
-                    "--filterExpression \"MQ < 40\" --filterName \"LowMappingQual\" " \
+                    "--filterExpression \"MQ < 40.0\" --filterName \"LowMappingQual\" " \
                     "--filterExpression \"SOR > 4.0\" --filterName \"StrandBias\" " \
                     "--variant {combined_vcf} -o {vcf_out}".format(reference=self.reference,
                             combined_vcf=combined_vcf, vcf_out=vcf_out)
