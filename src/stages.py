@@ -210,7 +210,7 @@ class Stages(object):
         recal_snp_out, tranches_snp_out, snp_plots_r_out = outputs
         cores = self.get_stage_options('snp_recalibrate_gatk', 'cores')
         gatk_args = "-T VariantRecalibrator --disable_auto_index_creation_and_locking_when_reading_rods " \
-                    "-R {reference} --minNumBadVariants 5000 --num_threads {cores} -maxGaussians 4 " \
+                    "-R {reference} --minNumBadVariants 5000 --num_threads {cores} --maxGaussians 4 " \
                     "-resource:hapmap,known=false,training=true,truth=true,prior=15.0 {hapmap} " \
                     "-resource:omni,known=false,training=true,truth=true,prior=12.0 {one_k_g_snps} " \
                     "-resource:1000G,known=false,training=true,truth=false,prior=10.0 {one_k_g_highconf_snps} " \
