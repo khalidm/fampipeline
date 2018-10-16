@@ -214,7 +214,7 @@ class Stages(object):
                     "-resource:hapmap,known=false,training=true,truth=true,prior=15.0 {hapmap} " \
                     "-resource:omni,known=false,training=true,truth=true,prior=12.0 {one_k_g_snps} " \
                     "-resource:1000G,known=false,training=true,truth=false,prior=10.0 {one_k_g_highconf_snps} " \
-                    "-an QD -an MQRankSum -an ReadPosRankSum -an FS -an InbreedingCoeff " \
+                    "-an QD -an MQRankSum -an ReadPosRankSum -an FS " \
                     "-input {genotype_vcf} --recal_file {recal_snp} --tranches_file {tranches_snp} " \
                     "-rscriptFile {snp_plots} -mode SNP".format(reference=self.reference,
                             cores=cores, hapmap=self.hapmap, one_k_g_snps=self.one_k_g_snps,
