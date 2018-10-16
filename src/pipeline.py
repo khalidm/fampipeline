@@ -173,7 +173,7 @@ def make_pipeline(state):
         name='combine_variants_gatk',
         input=output_from('apply_snp_recalibrate_gatk'),
         filter=suffix('.recal_SNP.vcf'),
-        add_inputs=add_inputs(['FAMExomes.recal_INDEL.vcf']),
+        add_inputs=add_inputs(['results/variants/FAMExomes.recal_INDEL.vcf']),
         output='.combined.vcf')
         .follows('apply_indel_recalibrate_gatk'))
 
